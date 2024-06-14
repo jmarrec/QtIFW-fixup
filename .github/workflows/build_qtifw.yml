@@ -1,0 +1,83 @@
+name: Build QtIFW statically
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
+      fail-fast: false
+      matrix:
+        build_name: [apple-clang-14, apple-clang-14-armv8]
+        include:
+        - build_name: apple-clang-14
+          os: macos-13
+          arch: x86_64
+          SDKROOT: /Applications/Xcode_14.3.1.app
+        - build_name: apple-clang-14-armv8
+          os: macos-14
+          arch: arm64
+          SDKROOT: /Applications/Xcode_14.3.1.app
+
+
+
+    steps:
+    - name: setup
+      shell: bash
+      run: |
+        sudo xcode-select -switch "${{ matrix.SDKROOT }}"
+        clang --version
+        sdk_path=$(xcrun --sdk macosx --show-sdk-path)
+        echo "sdk_path=$sdk_path" >> $GITHUB_ENV
+        brew install ninja md5sha1sum ccache
+        mkdir build-qt6
+        mkdir build-ifw
+
+
+    - name: Checkout Qt6 repos
+      shell: bash
+      run: |
+        git clone https://code.qt.io/qt/qt5.git qt6
+        cd qt6
+        git switch 6.7.2
+        perl init-repository --module-subset="qt5compat,qtbase,qtdeclarative,qttools,qttranslations,qtshadertools"
+
+    - name: Build Qt6 statically
+      working-directory: build-qt6
+      shell: bash
+      run: |
+        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
+        ninja
+        cmake -DFEATURE_no_prefix:BOOL=OFF .
+        ninja install
+        echo "$(pwd)/qtbase/bin" >> $GITHUB_PATH
+
+    - name: Checkout installer-framework
+      uses: actions/checkout@v4
+      with:
+        # Repository name with owner. For example, actions/checkout
+        # Default: ${{ github.repository }}
+        repository: 'jmarrec/installer-framework'
+        branch: 'QTIFW-3084'
+        path: 'installer-framework'
+
+    - name: Build QTIFW
+      working-directory: build-ifw
+      shell: bash
+      run: |
+        qmake -version
+        qmake ../installer-framework/installerfw.pro
+        make -j $(nproc)
+
+    - name: Archive binary artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: QtIFW-5.0.0-${{ matrix.arch }}
+        path: build-ifw/bin/*
