@@ -36,10 +36,9 @@ jobs:
         clang --version
         sdk_path=$(xcrun --sdk macosx --show-sdk-path)
         echo "sdk_path=$sdk_path" >> $GITHUB_ENV
-        brew install ninja md5sha1sum ccache
+        brew install ninja md5sha1sum ccache xz
         mkdir build-qt6
         mkdir build-ifw
-
 
     - name: Checkout Qt6 repos
       shell: bash
@@ -53,10 +52,12 @@ jobs:
       working-directory: build-qt6
       shell: bash
       run: |
-        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
+        ../qt6/configure -developer-build -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype -- -DQT_BUILD_TESTS_BY_DEFAULT:BOOL=OFF
         ninja
-        cmake -DFEATURE_no_prefix:BOOL=OFF .
-        ninja install
+        # ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
+        # ninja
+        # cmake -DFEATURE_no_prefix:BOOL=OFF .
+        # ninja install || true
         echo "$(pwd)/qtbase/bin" >> $GITHUB_PATH
 
     - name: Checkout installer-framework
