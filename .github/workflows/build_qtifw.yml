@@ -90,3 +90,7 @@ jobs:
       with:
         name: QtIFW-5.0.0-${{ matrix.arch }}
         path: build-ifw/bin/*
+
+    - name: Setup tmate session
+      if: ${{ always() }}
+      uses: mxschmitt/action-tmate@v3
