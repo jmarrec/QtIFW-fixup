@@ -33,7 +33,7 @@ jobs:
         clang --version
         sdk_path=$(xcrun --sdk macosx --show-sdk-path)
         echo "sdk_path=$sdk_path" >> $GITHUB_ENV
-        brew install ninja md5sha1sum ccache xz
+        brew install ninja ccache xz coreutils
         mkdir build-qt6
         mkdir build-ifw
 
@@ -78,7 +78,7 @@ jobs:
         echo "::endgroup::"
 
         begin_group "QMake Configure"
-        qmake ../installer-framework/installerfw.pro
+        qmake CONFIG+=libarchive ../installer-framework/installerfw.pro
         echo "::endgroup::"
 
         begin_group "Build"
