@@ -63,7 +63,7 @@ jobs:
         # Repository name with owner. For example, actions/checkout
         # Default: ${{ github.repository }}
         repository: 'jmarrec/installer-framework'
-        branch: 'QTIFW-3084-more'
+        ref: 'QTIFW-3084-more'
         path: 'installer-framework'
 
     - name: Build QTIFW
@@ -78,7 +78,7 @@ jobs:
         echo "::endgroup::"
 
         begin_group "QMake Configure"
-        qmake CONFIG+=libarchive ../installer-framework/installerfw.pro
+        qmake CONFIG+=libarchive INCLUDEPATH+=$(brew --prefix xz)/include LIBS+="-L$(brew --prefix xz)/lib" ../installer-framework/installerfw.pro
         echo "::endgroup::"
 
         begin_group "Build"
@@ -90,7 +90,3 @@ jobs:
       with:
         name: QtIFW-5.0.0-${{ matrix.arch }}
         path: build-ifw/bin/*
-
-    - name: Setup tmate session
-      if: ${{ always() }}
-      uses: mxschmitt/action-tmate@v3
