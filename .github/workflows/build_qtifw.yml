@@ -7,6 +7,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  USE_LIBARCHIVE: false
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -33,7 +36,10 @@ jobs:
         clang --version
         sdk_path=$(xcrun --sdk macosx --show-sdk-path)
         echo "sdk_path=$sdk_path" >> $GITHUB_ENV
-        brew install ninja ccache xz coreutils
+        brew install ninja ccache coreutils
+        if [[ "${{ env.USE_LIBARCHIVE }}" == "true" ]]; then
+          brew install xz
+        fi
         mkdir build-qt6
         mkdir build-ifw
 
@@ -78,7 +84,11 @@ jobs:
         echo "::endgroup::"
 
         begin_group "QMake Configure"
-        qmake CONFIG+=libarchive INCLUDEPATH+=$(brew --prefix xz)/include LIBS+="-L$(brew --prefix xz)/lib" ../installer-framework/installerfw.pro
+        if [[ "${{ env.USE_LIBARCHIVE }}" == "true" ]]; then
+          qmake CONFIG+=libarchive INCLUDEPATH+=$(brew --prefix xz)/include LIBS+="-L$(brew --prefix xz)/lib" ../installer-framework/installerfw.pro
+        else
+          qmake ../installer-framework/installerfw.pro
+        fi
         echo "::endgroup::"
 
         begin_group "Build"
