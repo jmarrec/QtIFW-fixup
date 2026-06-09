@@ -69,7 +69,7 @@ jobs:
         echo "$(pwd)/qtbase/bin" >> $GITHUB_PATH
 
     - name: Checkout installer-framework
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         # Repository name with owner. For example, actions/checkout
         # Default: ${{ github.repository }}
@@ -92,7 +92,7 @@ jobs:
         if [[ "${{ env.USE_LIBARCHIVE }}" == "true" ]]; then
           qmake CONFIG+=libarchive \
             INCLUDEPATH+=$(brew --prefix xz)/include \
-            LIBS+="-L$(brew --prefix xz)/lib" \
+            IFW_LZMA_LIBRARY=$(brew --prefix xz)/lib/liblzma.a \
             ../installer-framework/installerfw.pro
         else
           qmake ../installer-framework/installerfw.pro
