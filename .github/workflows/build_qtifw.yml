@@ -126,6 +126,21 @@ jobs:
         make -j $(nproc)
         echo "::endgroup::"
 
+    - name: Verify no Homebrew dependencies
+      working-directory: build-ifw/bin
+      shell: bash
+      run: |
+        fail=0
+        for exe in *; do
+          bad=$(otool -L "$exe" | grep 'homebrew' || true)
+          if [[ -n "$bad" ]]; then
+            echo "ERROR: $exe has Homebrew dependency:"
+            echo "$bad"
+            fail=1
+          fi
+        done
+        exit $fail
+
     - name: Zip binaries
       run: zip -j QtIFW-5.0.0-${{ matrix.arch }}.zip build-ifw/bin/*
 
