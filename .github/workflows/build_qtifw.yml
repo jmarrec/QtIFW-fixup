@@ -89,8 +89,7 @@ jobs:
       working-directory: build-qt6
       shell: bash
       run: |
-        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype \
-          -- -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype -ccache
 
     - name: Build Qt6 statically
       working-directory: build-qt6
@@ -132,11 +131,11 @@ jobs:
           # but If I don't it uses the system's /usr/lib/liblzma.5.dylib which is good
           # I do NOT want to pass "LIBS+=-L$(brew --prefix xz)/lib" because installerfw.pri will add "-llzma"
           # and it will link against the homebrew dynamic library which has different codesigning
-          qmake CONFIG+=libarchive \
+          qmake CONFIG+=libarchive CONFIG+=ccache \
             INCLUDEPATH+=$(brew --prefix xz)/include \
             ../installer-framework/installerfw.pro
         else
-          qmake ../installer-framework/installerfw.pro
+          qmake CONFIG+=ccache ../installer-framework/installerfw.pro
         fi
 
         echo "::endgroup::"
