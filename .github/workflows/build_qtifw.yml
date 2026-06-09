@@ -109,9 +109,12 @@ jobs:
 
         begin_group "QMake Configure"
         if [[ "${{ env.USE_LIBARCHIVE }}" == "true" ]]; then
+          # I could pass IFW_LZMA_LIBRARY=$(brew --prefix xz)/lib/liblzma.a to statically link against liblzma
+          # but If I don't it uses the system's /usr/lib/liblzma.5.dylib which is good
+          # I do NOT want to pass "LIBS+=-L$(brew --prefix xz)/lib" because installerfw.pri will add "-llzma"
+          # and it will link against the homebrew dynamic library which has different codesigning
           qmake CONFIG+=libarchive \
             INCLUDEPATH+=$(brew --prefix xz)/include \
-            IFW_LZMA_LIBRARY=$(brew --prefix xz)/lib/liblzma.a \
             ../installer-framework/installerfw.pro
         else
           qmake ../installer-framework/installerfw.pro
