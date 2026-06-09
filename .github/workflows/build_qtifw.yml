@@ -47,7 +47,15 @@ jobs:
         mkdir build-qt6
         mkdir build-ifw
 
+    - name: Restore Qt6 cache
+      id: cache-qt6
+      uses: actions/cache/restore@v4
+      with:
+        path: build-qt6/qtbase
+        key: qt6-6.11.0-a76004f1-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}
+
     - name: Checkout Qt6 repos
+      if: steps.cache-qt6.outputs.cache-hit != 'true'
       shell: bash
       run: |
         git clone https://code.qt.io/qt/qt5.git qt6
@@ -61,16 +69,23 @@ jobs:
         cd ..
 
     - name: Build Qt6 statically
+      if: steps.cache-qt6.outputs.cache-hit != 'true'
       working-directory: build-qt6
       shell: bash
       run: |
-        # ../qt6/configure -developer-build -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype -- -DQT_BUILD_TESTS_BY_DEFAULT:BOOL=OFF
-        # ninja
         ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
         ninja
-        # cmake -DFEATURE_no_prefix:BOOL=OFF .
         ninja install || true
-        echo "$(pwd)/qtbase/bin" >> $GITHUB_PATH
+
+    - name: Save Qt6 cache
+      if: steps.cache-qt6.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: build-qt6/qtbase
+        key: ${{ steps.cache-qt6.outputs.cache-primary-key }}
+
+    - name: Add Qt6 to PATH
+      run: echo "${{ github.workspace }}/build-qt6/qtbase/bin" >> $GITHUB_PATH
 
     - name: Checkout installer-framework
       uses: actions/checkout@v6
