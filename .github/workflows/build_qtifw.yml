@@ -55,12 +55,10 @@ jobs:
         key: qt6-6.11.0-a76004f1-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}
 
     - name: Checkout Qt6 repos
-      if: steps.cache-qt6.outputs.cache-hit != 'true'
       shell: bash
       run: |
-        git clone https://code.qt.io/qt/qt5.git qt6
+        git clone --depth 1 -b 6.11.0 https://code.qt.io/qt/qt5.git qt6
         cd qt6
-        git switch 6.11.0
         perl init-repository --module-subset="qt5compat,qtbase,qtdeclarative,qttools,qttranslations,qtshadertools"
         # qyieldcpu: Fix compilation with macOS 26.4 SDK
         # qt6/qtbase/src/corelib/thread/qyieldcpu.h:37:5: error: implicitly declaring library function '__yield' with type 'void ()' [-Werror,-Wimplicit-function-declaration]
