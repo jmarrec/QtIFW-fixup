@@ -66,12 +66,17 @@ jobs:
         git cherry-pick a76004f16fdc43e1b7af83bfdf3f1a613491b234
         cd ..
 
+    - name: Configure Qt6 statically
+      working-directory: build-qt6
+      shell: bash
+      run: |
+        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
+
     - name: Build Qt6 statically
       if: steps.cache-qt6.outputs.cache-hit != 'true'
       working-directory: build-qt6
       shell: bash
       run: |
-        ../qt6/configure -prefix $PWD/qtbase -release -static -accessibility -qt-zlib -qt-libpng -no-cups -no-sql-sqlite -no-qml-debug -nomake examples -nomake tests -no-freetype
         ninja
         ninja install || true
 
