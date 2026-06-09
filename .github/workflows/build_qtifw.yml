@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  USE_LIBARCHIVE: false
+  USE_LIBARCHIVE: true
 
 jobs:
   build:
@@ -48,8 +48,13 @@ jobs:
       run: |
         git clone https://code.qt.io/qt/qt5.git qt6
         cd qt6
-        git switch 6.7.2
+        git switch 6.11.0
         perl init-repository --module-subset="qt5compat,qtbase,qtdeclarative,qttools,qttranslations,qtshadertools"
+        # qyieldcpu: Fix compilation with macOS 26.4 SDK
+        # qt6/qtbase/src/corelib/thread/qyieldcpu.h:37:5: error: implicitly declaring library function '__yield' with type 'void ()' [-Werror,-Wimplicit-function-declaration]
+        cd qtbase
+        git cherry-pick a76004f16fdc43e1b7af83bfdf3f1a613491b234
+        cd ..
 
     - name: Build Qt6 statically
       working-directory: build-qt6
@@ -69,7 +74,7 @@ jobs:
         # Repository name with owner. For example, actions/checkout
         # Default: ${{ github.repository }}
         repository: 'jmarrec/installer-framework'
-        ref: 'QTIFW-3084-more-410'
+        ref: 'QTIFW-3084-more-4_11_0'
         path: 'installer-framework'
 
     - name: Build QTIFW
@@ -85,10 +90,14 @@ jobs:
 
         begin_group "QMake Configure"
         if [[ "${{ env.USE_LIBARCHIVE }}" == "true" ]]; then
-          qmake CONFIG+=libarchive INCLUDEPATH+=$(brew --prefix xz)/include LIBS+="-L$(brew --prefix xz)/lib" ../installer-framework/installerfw.pro
+          qmake CONFIG+=libarchive \
+            INCLUDEPATH+=$(brew --prefix xz)/include \
+            LIBS+="-L$(brew --prefix xz)/lib" \
+            ../installer-framework/installerfw.pro
         else
           qmake ../installer-framework/installerfw.pro
         fi
+
         echo "::endgroup::"
 
         begin_group "Build"
