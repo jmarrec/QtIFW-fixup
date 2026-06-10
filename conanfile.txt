@@ -1,0 +1,13 @@
+[requires]
+qt/6.7.1
+
+[options]
+qt5compat=True
+qtbase=True
+qtdeclarative=True
+qttools=True
+qttranslations=True
+qtshadertools=True
+
+[generators]
+VirtualBuildEnv

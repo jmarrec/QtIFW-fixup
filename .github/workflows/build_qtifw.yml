@@ -144,6 +144,63 @@ jobs:
         make -j $(nproc)
         echo "::endgroup::"
 
+    - name: Test minimal offline installer (extract sanity check)
+      shell: bash
+      run: |
+        set -ex
+        ROOT_DIR=$(pwd)
+
+        TEST_DIR="${ROOT_DIR}/ifw_test"
+        INSTALL_DIR="${ROOT_DIR}/ifw_test_install"
+        rm -rf "$TEST_DIR" "$INSTALL_DIR"
+
+        mkdir -p "$TEST_DIR/packages/com.test.component/data/subdir"
+        mkdir -p "$TEST_DIR/packages/com.test.component/meta"
+        mkdir -p "$TEST_DIR/config"
+
+        echo "hello from test component" > "$TEST_DIR/packages/com.test.component/data/hello.txt"
+        echo "nested file" > "$TEST_DIR/packages/com.test.component/data/subdir/nested.txt"
+
+        cat > "$TEST_DIR/packages/com.test.component/meta/package.xml" <<'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Package>
+            <DisplayName>Test</DisplayName>
+            <Description>Test component</Description>
+            <Version>1.0.0</Version>
+            <ReleaseDate>2026-06-10</ReleaseDate>
+            <Default>true</Default>
+            <Name>com.test.component</Name>
+        </Package>
+        EOF
+
+        cat > "$TEST_DIR/config/config.xml" <<EOF
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Installer>
+            <Name>Test</Name>
+            <Version>1.0.0</Version>
+            <Title>Test Installer</Title>
+            <Publisher>Test</Publisher>
+            <StartMenuDir>Test</StartMenuDir>
+            <TargetDir>$INSTALL_DIR</TargetDir>
+        </Installer>
+        EOF
+
+        cd "$TEST_DIR"
+        "${ROOT_DIR}/bin/binarycreator" --offline-only -c config/config.xml -p packages test_installer
+
+        # binarycreator appends the resource collection after installerbase was signed,
+        # which invalidates the original code signature. Re-sign before running.
+        codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime test_installer.app
+
+        ./test_installer.app/Contents/MacOS/test_installer --verbose --accept-licenses --default-answer --confirm-command --root "$INSTALL_DIR" install
+
+        echo "Verifying extracted component data files..."
+        test -f "$INSTALL_DIR/hello.txt"
+        test -f "$INSTALL_DIR/subdir/nested.txt"
+        diff <(echo "hello from test component") "$INSTALL_DIR/hello.txt"
+        diff <(echo "nested file") "$INSTALL_DIR/subdir/nested.txt"
+        echo "OK: component data extracted successfully"
+
     - name: Save CCache cache
       if: always() && steps.cacheccache-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v5
