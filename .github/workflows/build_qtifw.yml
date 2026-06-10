@@ -68,15 +68,15 @@ jobs:
       with:
         path: |
           ${{ steps.setup-runner.outputs.ccache-dir }}
-        key: ccache-qt6-6.11.0-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}-${{ github.run_id }}
+        key: ccache-qt6-6.9.1-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}-${{ github.run_id }}
         restore-keys: |
-          ccache-qt6-6.11.0-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}-
-          ccache-qt6-6.11.0-${{ matrix.os }}-
+          ccache-qt6-6.9.1-${{ matrix.os }}-libarchive-${{ env.USE_LIBARCHIVE }}-
+          ccache-qt6-6.9.1-${{ matrix.os }}-
 
     - name: Checkout Qt6 repos
       shell: bash
       run: |
-        git clone --depth 1 -b 6.11.0 https://github.com/qt/qt5.git qt6
+        git clone --depth 1 -b 6.9.1 https://github.com/qt/qt5.git qt6
         cd qt6
         perl init-repository --mirror https://github.com/qt/ --module-subset="qt5compat,qtbase,qtdeclarative,qttools,qttranslations,qtshadertools"
         # qyieldcpu: Fix compilation with macOS 26.4 SDK
