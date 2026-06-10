@@ -53,7 +53,7 @@ jobs:
         echo "CCACHE_DIR=$CCACHE_DIR" >> $GITHUB_ENV
         echo "ccache-dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
         ccache --set-config=cache_dir=$CCACHE_DIR
-        ccache --set-config=max_size=2G
+        ccache --set-config=max_size=5G
         ccache --set-config=compression=true
         ccache --set-config=sloppiness=pch_defines,time_macros
         ccache --set-config=compiler_check=content # darwin only
